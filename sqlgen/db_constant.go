@@ -120,13 +120,7 @@ func (tps ColumnTypes) Contain(targetTp ColumnType) bool {
 
 var ColumnTypeAllTypes = ColumnTypes{
 	ColumnTypeInt,
-	ColumnTypeTinyInt,
-	ColumnTypeSmallInt,
-	ColumnTypeMediumInt,
 	ColumnTypeBigInt,
-	ColumnTypeBoolean,
-	ColumnTypeFloat,
-	ColumnTypeDouble,
 	ColumnTypeDecimal,
 
 	ColumnTypeDate,
