@@ -35,24 +35,14 @@ func (s *State) GenNewColumnWithType(tps ...ColumnType) *Column {
 	// collate is only used if the type is string.
 	col.collate = CollationType(rand.Intn(int(CollationTypeMax)-1) + 1)
 	switch col.Tp {
-	// https://docs.pingcap.com/tidb/stable/data-type-numeric
-	case ColumnTypeFloat, ColumnTypeDouble:
-		// Float/Double precision is deprecated.
-		//https://github.com/pingcap/tidb/issues/21692
-		col.arg1 = 0
-		col.arg2 = 0
 	case ColumnTypeDecimal:
 		col.arg1 = 1 + rand.Intn(65)
 		upper := mathutil.Min(col.arg1, 30)
 		col.arg2 = 1 + rand.Intn(upper)
-	case ColumnTypeBit:
-		col.arg1 = 1 + rand.Intn(62)
 	case ColumnTypeChar, ColumnTypeBinary:
 		col.arg1 = 1 + rand.Intn(255)
 	case ColumnTypeVarchar, ColumnTypeText, ColumnTypeBlob, ColumnTypeVarBinary:
 		col.arg1 = 1 + rand.Intn(512)
-	case ColumnTypeEnum, ColumnTypeSet:
-		col.args = []string{"Alice", "Bob", "Charlie", "David"}
 	}
 	if !col.Tp.RequiredFieldLength() && rand.Intn(5) == 0 {
 		col.arg1, col.arg2 = 0, 0

@@ -128,23 +128,12 @@ var ColumnTypeAllTypes = ColumnTypes{
 	ColumnTypeFloat,
 	ColumnTypeDouble,
 	ColumnTypeDecimal,
-	ColumnTypeBit,
-
-	ColumnTypeChar,
-	ColumnTypeVarchar,
-	ColumnTypeText,
-	ColumnTypeBlob,
-	ColumnTypeBinary,
-	ColumnTypeVarBinary,
-	ColumnTypeEnum,
-	ColumnTypeSet,
 
 	ColumnTypeDate,
 	ColumnTypeTime,
 	ColumnTypeDatetime,
 	ColumnTypeTimestamp,
 	ColumnTypeYear,
-	ColumnTypeJSON,
 }
 
 var ColumnTypeIntegerTypes = ColumnTypes{

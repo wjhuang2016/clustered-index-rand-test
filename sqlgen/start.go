@@ -16,20 +16,13 @@ var Start = NewFn(func(state *State) Fn {
 	}
 	return Or(
 		SwitchRowFormatVer.SetW(1),
-		SwitchClustered.SetW(1),
-		AdminCheck.SetW(1),
+		AdminCheck.SetW(5),
 		CreateTable.SetW(13),
-		CreateTableLike.SetW(6),
 		Query.SetW(20),
 		QueryPrepare.SetW(2),
-		DMLStmt.SetW(20),
-		DDLStmt.SetW(5),
-		SplitRegion.SetW(1),
-		AnalyzeTable.SetW(0),
+		DMLStmt.SetW(50),
 		PrepareStmt.SetW(2),
 		DeallocPrepareStmt.SetW(1),
-		FlashBackTable.SetW(1),
-		SelectIntoOutFile.SetW(1),
 		LoadTable.SetW(1),
 		DropTable.SetW(1),
 	)
@@ -41,7 +34,7 @@ var DMLStmt = NewFn(func(state *State) Fn {
 	}
 	return Or(
 		CommonDelete.SetW(1),
-		CommonInsertOrReplace.SetW(3),
+		CommonInsertOrReplace.SetW(10),
 		CommonUpdate.SetW(1),
 	)
 })
@@ -118,26 +111,14 @@ var CreateTable = NewFn(func(state *State) Fn {
 	tbl := state.GenNewTable()
 	state.AppendTable(tbl)
 	state.Store(ScopeKeyCurrentTables, Tables{tbl})
-	if state.Roll(ConfigKeyProbabilityTiFlashTable, 0) {
-		state.InjectTodoSQL(fmt.Sprintf("/*DDL*/ alter table %s set tiflash replica 1", tbl.Name))
-		state.InjectTodoSQL(fmt.Sprintf("select sleep(20)"))
-	}
 	// The eval order matters because the dependency is ColumnDefinitions <- PartitionDefinition <- IndexDefinitions.
 	eColDefs := ColumnDefinitions.Eval(state)
 	partCol := tbl.GetRandColumnForPartition()
 	if partCol != nil {
 		state.Store(ScopeKeyCurrentPartitionColumn, partCol)
 	}
-	ePartitionDef := PartitionDefinition.Eval(state)
-	eTableOption := TableOptions.Eval(state)
 	eIdxDefs := IndexDefinitions.Eval(state)
-	if eIdxDefs == "" {
-		return Strs("create table", tbl.Name, "(", eColDefs, ")",
-			eTableOption, ePartitionDef)
-	} else {
-		return Strs("create table", tbl.Name, "(", eColDefs, ",", eIdxDefs, ")",
-			eTableOption, ePartitionDef)
-	}
+	return Strs("create table", tbl.Name, "(", eColDefs, ",", eIdxDefs, ")")
 })
 
 var TableOptions = NewFn(func(state *State) Fn {
@@ -162,10 +143,7 @@ var ColumnDefinition = NewFn(func(state *State) Fn {
 })
 
 var IndexDefinitions = NewFn(func(state *State) Fn {
-	if !state.CheckAssumptions(MustHaveKey(ScopeKeyCurrentTables)) {
-		return None
-	}
-	return Repeat(IndexDefinition.SetR(0, 4), Str(","))
+	return Repeat(IndexDefinition.SetR(1, 4), Str(","))
 })
 
 var IndexDefinition = NewFn(func(state *State) Fn {
@@ -257,8 +235,6 @@ var Query = NewFn(func(state *State) Fn {
 	}
 	return Or(
 		SingleSelect,
-		UnionSelect,
-		MultiTableSelect,
 	)
 })
 
@@ -271,8 +247,6 @@ var SingleSelect = NewFn(func(state *State) Fn {
 	state.Store(ScopeKeyCurrentSelectedColNum, 1+rand.Intn(len(tbl.Columns)))
 	return Or(
 		CommonSelect,
-		AggregationSelect,
-		WindowSelect,
 	)
 })
 
